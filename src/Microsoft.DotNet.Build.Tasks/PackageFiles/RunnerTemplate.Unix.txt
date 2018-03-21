@@ -39,6 +39,16 @@ function copy_core_file_to_temp_location {
   cp $core_file_name $new_location
 }
 
+function upload_dump_without_dumpling {
+  local dump_folder="/tmp/coredumps"
+  local start_time=0
+  if [[ ! -z "${HELIX_SCRIPT_ROOT}" || ! -z "${HELIX_PYTHONPATH}" || ! -z "${HELIX_WORKITEM_ROOT}" || ! -z "${HELIX_RESULTS_CONTAINER_URI}" || ! -z "${HELIX_RESULTS_CONTAINER_WSAS}" || ! -z "${HELIX_RESULTS_CONTAINER_RSAS}"  ]]; then
+    dump_file_path=$(( "${HELIX_PYTHONPATH}" "${HELIX_WORKITEM_ROOT}"/DumplingHelper.py get_latest_dump $dump_folder $start_time ) 2>&1)
+    echo $dump_file_path
+    "${HELIX_PYTHONPATH}" "${HELIX_SCRIPT_ROOT}"/upload_script.py -URI "${HELIX_RESULTS_CONTAINER_URI}" -WSAS "${HELIX_RESULTS_CONTAINER_WSAS}" -RSAS "${HELIX_RESULTS_CONTAINER_RSAS}" -result $dump_file_path - upload_client_type file -result_name core.dmp
+  fi
+}
+
 if [ "$RUNTIME_PATH" == "" ]
 then
 echo error: RUNTIME_PATH is not defined.  Usage: $0 RUNTIME_PATH
@@ -101,10 +111,12 @@ if [ "$(uname -s)" == "Linux" ]; then
     for f in core.*; do
       [[ $f =~ core.[0-9]+ ]] && print_info_from_core_file "$f" "dotnet" && copy_core_file_to_temp_location "$f" && rm "$f"
     done
+    upload_dump_without_dumpling
   elif [ -f core ]; then
     print_info_from_core_file "core" "dotnet"
     copy_core_file_to_temp_location "core"
     rm "core"
+    upload_dump_without_dumpling
   else
     echo ... found no dump in $PWD
   fi

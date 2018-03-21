@@ -50,12 +50,15 @@ def find_latest_dump(folder, startTimeStr):
     globPattern = "/*core*"
 
   allFiles = glob.glob(folder + globPattern);
+  #print allFiles
   if allFiles:
     latestFile = max(allFiles, key=os.path.getmtime)
     latestTime = os.path.getmtime(latestFile)
-    if (latestTime > startTime):
+  #  print latestTime
+  if (latestTime > startTime):
       return latestFile
-  return None
+  #return "hello"
+  #return None
 
 def collect_dump(exitcodeStr, folder, startTimeStr, projectName, incpaths):
   exitcode = int(exitcodeStr)
@@ -121,6 +124,11 @@ def main(argv):
     else:
       print("Invalid number of arguments passed to collect_dump.")
       sys.exit(1)
+  elif (argv[1] == "get_latest_dump"):
+    if (len(argv) == 4):
+      sys.exit(find_latest_dump(argv[2], argv[3]))
+    else:
+      print("Invalid number of arguments passed to get_latest_dump")
   else:
     print(argv[1] + " is not a valid command.")
     print_usage()
